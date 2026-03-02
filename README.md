@@ -27,6 +27,9 @@ python vnstock_demo.py "<DANH_SÁCH_MÃ>" <SỐ_PHIÊN> <CHẾ_ĐỘ_RÚT_GỌN>
 3.  **CHẾ_ĐỘ_RÚT_GỌN** (Mặc định: `0`):
     - `0`: Hiển thị đầy đủ (Lịch sử giá, Tổng quan công ty, Báo cáo tài chính, Chỉ số tài chính).
     - `1`: Chỉ hiển thị bảng lịch sử giá cho từng mã (Minimal Mode).
+4.  **INTERVAL** (Mặc định: `1D`): Khung thời gian dữ liệu.
+    - `1D`: Theo ngày (Mặc định).
+    - `1H`: Theo khung 1 giờ.
 
 ### Ví dụ sử dụng:
 - **Xem nhiều mã đồng thời (Chế độ rút gọn)**:

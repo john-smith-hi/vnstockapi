@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 import os
 import time
 
-def analyze_stock(v, sym, limit, minimal_mode):
+def analyze_stock(v, sym, limit, minimal_mode, interval='1D'):
     """
     Hàm phân tích một mã cổ phiếu cụ thể.
     """
@@ -20,9 +20,12 @@ def analyze_stock(v, sym, limit, minimal_mode):
         print(f"\n--- [ LỊCH SỬ GIÁ {sym} ] ---")
         try:
             end_date = datetime.now().strftime('%Y-%m-%d')
-            start_date = (datetime.now() - timedelta(days=limit * 3)).strftime('%Y-%m-%d')
+            if interval == '1H':
+                start_date = (datetime.now() - timedelta(days=limit * 1)).strftime('%Y-%m-%d')
+            else:
+                start_date = (datetime.now() - timedelta(days=limit * 3)).strftime('%Y-%m-%d')
             
-            df_hist = stock.quote.history(start=start_date, end=end_date)
+            df_hist = stock.quote.history(start=start_date, end=end_date, interval=interval)
             
             if not df_hist.empty:
                 df_hist = df_hist.sort_values('time')
@@ -193,7 +196,7 @@ def screen_hose_stocks(v):
 def main():
     """
     Chương trình demo Vnstock 3.x đa mã.
-    Hỗ trợ tham số: python vnstock_demo.py <DANH_SÁCH_MÃ> <SỐ_PHIÊN> <MINIMAL_MODE>
+    Hỗ trợ tham số: python vnstock_demo.py <DANH_SÁCH_MÃ> <SỐ_PHIÊN> <MINIMAL_MODE> <INTERVAL>
     Hoặc: python vnstock_demo.py SCREEN_HOSE
     """
     
@@ -217,6 +220,8 @@ def main():
         
     minimal_mode = (sys.argv[3] == '1') if len(sys.argv) > 3 else False
     
+    interval = sys.argv[4].upper() if len(sys.argv) > 4 else '1D'
+    
     # 2. Khởi tạo Vnstock
     v = Vnstock()
     
@@ -227,7 +232,7 @@ def main():
 
     for sym in symbols:
         if sym:
-            analyze_stock(v, sym, limit, minimal_mode)
+            analyze_stock(v, sym, limit, minimal_mode, interval)
 
     print("\n" + "="*50)
     print("      HOÀN THÀNH PHÂN TÍCH TẤT CẢ CÁC MÃ          ")
