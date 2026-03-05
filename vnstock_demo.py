@@ -10,7 +10,7 @@ def analyze_stock(v, sym, limit, minimal_mode, interval='1D'):
     Hàm phân tích một mã cổ phiếu cụ thể.
     """
     try:
-        stock = v.stock(symbol=sym, source='VCI')
+        stock = v.stock(symbol=sym, source='KBS')
         
         print(f"\n" + "="*50)
         print(f"      PHÂN TÍCH MÃ: {sym} ")
@@ -77,7 +77,7 @@ def screen_hose_stocks(v):
     max_retries = 3
     for attempt in range(max_retries):
         try:
-            temp_stock = v.stock(symbol='FPT', source='VCI')
+            temp_stock = v.stock(symbol='FPT', source='KBS')
             all_symbols_df = temp_stock.listing.all_symbols()
             
             if 'exchange' in all_symbols_df.columns:
@@ -120,7 +120,7 @@ def screen_hose_stocks(v):
             # Tăng độ trễ lên 3.5 giây để khớp với giới hạn 20 req/phút của gói Guest
             time.sleep(3.5)
             
-            s = v.stock(symbol=sym, source='VCI')
+            s = v.stock(symbol=sym, source='KBS')
             df_full = s.quote.history(start=start_date, end=end_date)
             
             if df_full.empty or len(df_full) < 50:
