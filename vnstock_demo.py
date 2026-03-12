@@ -20,10 +20,29 @@ def analyze_stock(v, sym, limit, minimal_mode, interval='1D'):
         print(f"\n--- [ LỊCH SỬ GIÁ {sym} ] ---")
         try:
             end_date = datetime.now().strftime('%Y-%m-%d')
-            if interval == '1H':
-                start_date = (datetime.now() - timedelta(days=limit * 1)).strftime('%Y-%m-%d')
+            
+            # Tính toán start_date an toàn và đủ số lượng nến dựa trên khung (interval)
+            now = datetime.now()
+            if interval == '1m':
+                days_offset = max(2, limit // 200 + 1)
+            elif interval == '5m':
+                days_offset = max(3, limit // 40 + 1)
+            elif interval == '15m':
+                days_offset = max(5, limit // 15 + 1)
+            elif interval == '30m':
+                days_offset = max(7, limit // 8 + 1)
+            elif interval == '1H':
+                days_offset = max(10, limit // 4 + 1)
+            elif interval == '1D':
+                days_offset = limit * 2
+            elif interval == '1W':
+                days_offset = limit * 8
+            elif interval == '1M':
+                days_offset = limit * 45
             else:
-                start_date = (datetime.now() - timedelta(days=limit * 3)).strftime('%Y-%m-%d')
+                days_offset = limit * 3
+                
+            start_date = (now - timedelta(days=days_offset)).strftime('%Y-%m-%d')
             
             df_hist = stock.quote.history(start=start_date, end=end_date, interval=interval)
             
@@ -220,7 +239,24 @@ def main():
         
     minimal_mode = (sys.argv[3] == '1') if len(sys.argv) > 3 else False
     
-    interval = sys.argv[4].upper() if len(sys.argv) > 4 else '1D'
+    interval_input = sys.argv[4] if len(sys.argv) > 4 else '1D'
+    # Chuẩn hóa linh hoạt
+    low_interval = interval_input.lower()
+    if low_interval in ['1m', '5m', '15m', '30m', '1h']:
+        interval = low_interval if low_interval != '1h' else '1H' # vnstock thường dùng 1H
+    elif low_interval in ['1d', '1w', '1m']: # 1M là tháng
+        interval = interval_input.upper()
+    else:
+        # Nếu không khớp, thử đoán: 'm' ở cuối là phút, còn lại viết hoa
+        if low_interval.endswith('m') and low_interval != '1m': # '1m' ở đây có thể là 1 month hoặc 1 minute tùy context, nhưng vnstock dùng 1M cho month
+             interval = low_interval
+        else:
+             interval = interval_input.upper()
+             
+    # Danh sách các khung được vnstock hỗ trợ chính thức
+    SUPPORTED_INTERVALS = ['1m', '5m', '15m', '30m', '1H', '1D', '1W', '1M']
+    if interval not in SUPPORTED_INTERVALS:
+        print(f"Cảnh báo: Khung '{interval}' có thể không được hỗ trợ. Các khung chuẩn: {', '.join(SUPPORTED_INTERVALS)}")
     
     # 2. Khởi tạo Vnstock
     v = Vnstock()
