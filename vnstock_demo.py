@@ -10,6 +10,55 @@ def analyze_stock(v, sym, limit, minimal_mode, interval='1D'):
     Hàm phân tích một mã cổ phiếu cụ thể.
     """
     try:
+        if sym == 'GOLD':
+            import requests
+            print(f"\n" + "="*50)
+            print(f"      PHÂN TÍCH MÃ: {sym} (Binance Spot Gold) ")
+            print("="*50)
+            print(f"\n--- [ LỊCH SỬ GIÁ {sym} (Đơn vị: USD/Oz, Vol: Oz) ] ---")
+            
+            # Mapping vnstock intervals to Binance
+            mapping = {
+                '1m': '1m', '5m': '5m', '15m': '15m', '30m': '30m', 
+                '1H': '1h', '1D': '1d', '1W': '1w', '1M': '1M'
+            }
+            binance_interval = mapping.get(interval, '1d')
+            
+            url = f"https://api.binance.com/api/v3/klines?symbol=PAXGUSDT&interval={binance_interval}&limit={limit}"
+            
+            try:
+                response = requests.get(url, timeout=10)
+                data = response.json()
+                
+                if isinstance(data, list) and len(data) > 0:
+                    df_hist = pd.DataFrame(data, columns=[
+                        'time', 'open', 'high', 'low', 'close', 'volume', 
+                        'close_time', 'quote_asset_volume', 'number_of_trades', 
+                        'taker_buy_base_asset_volume', 'taker_buy_quote_asset_volume', 'ignore'
+                    ])
+                    
+                    # Convert types
+                    df_hist['time'] = pd.to_datetime(df_hist['time'], unit='ms')
+                    numeric_cols = ['open', 'high', 'low', 'close', 'volume']
+                    df_hist[numeric_cols] = df_hist[numeric_cols].apply(pd.to_numeric)
+                    
+                    # Formatting time
+                    if binance_interval in ['1m', '5m', '15m', '30m', '1h']:
+                        df_hist['time'] = df_hist['time'].dt.strftime('%Y-%m-%d %H:%M:%S')
+                    else:
+                        df_hist['time'] = df_hist['time'].dt.strftime('%Y-%m-%d')
+                        
+                    df_hist['change'] = df_hist['close'].diff()
+                    df_hist['pct_change'] = df_hist['close'].pct_change() * 100
+                    
+                    pd.options.display.float_format = '{:,.2f}'.format
+                    print(df_hist[['time', 'open', 'high', 'low', 'close', 'change', 'pct_change', 'volume']])
+                else:
+                    print(f"Không tìm thấy dữ liệu hoặc lỗi API cho mã {sym}.")
+            except Exception as e:
+                print(f"Lỗi truy xuất Binance cho {sym}: {e}")
+            return
+
         stock = v.stock(symbol=sym, source='KBS')
         
         print(f"\n" + "="*50)
