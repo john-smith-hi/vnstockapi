@@ -110,18 +110,20 @@ def analyze_stock(v, sym, limit, minimal_mode, interval='1D'):
             
             binance_base_interval = get_binance_interval(interval)
             
-            # Nếu interval không được hỗ trợ trực tiếp, ta sẽ lấy limit nhiều hơn để resample
-            fetch_limit = limit
+            # Cần lấy limit + 1 nến để dòng đầu tiên trong bảng kết quả (tail(limit)) có dữ liệu change
             is_native = (f"{value}{unit.lower()}" == binance_base_interval) or \
                         (unit == 'H' and f"{value}h" == binance_base_interval) or \
                         (unit == 'M' and f"{value}M" == binance_base_interval)
             
-            if not is_native:
-                # Tính toán sơ bộ số lượng nến cần lấy để sau khi resample vẫn đủ limit
+            if is_native:
+                fetch_limit = limit + 1
+            else:
+                # Tính toán sơ bộ số lượng nến cần lấy để sau khi resample vẫn đủ limit + 1
                 base_val, _ = parse_interval(binance_base_interval)
                 ratio = value / base_val
-                fetch_limit = int(limit * ratio) + 10 # Buffer
-                if fetch_limit > 1000: fetch_limit = 1000 # Max Binance limit
+                fetch_limit = int((limit + 1) * ratio) + 5 # Buffer
+            
+            if fetch_limit > 1000: fetch_limit = 1000 # Max Binance limit
             
             url = f"https://api.binance.com/api/v3/klines?symbol=PAXGUSDT&interval={binance_base_interval}&limit={fetch_limit}"
             
@@ -156,7 +158,9 @@ def analyze_stock(v, sym, limit, minimal_mode, interval='1D'):
                     
                     pd.options.display.float_format = '{:,.2f}'.format
                     print(f"\n--- [ LỊCH SỬ GIÁ {sym} ] ---")
-                    print(df_hist.tail(limit)[['time_str', 'open', 'high', 'low', 'close', 'change', 'pct_change', 'volume']])
+                    # Reset index để hiển thị đẹp từ 0
+                    show_df = df_hist.tail(limit)[['time_str', 'open', 'high', 'low', 'close', 'change', 'pct_change', 'volume']].reset_index(drop=True)
+                    print(show_df)
                 else:
                     print(f"Không tìm thấy dữ liệu hoặc lỗi API cho mã {sym}.")
             except Exception as e:
@@ -239,7 +243,8 @@ def analyze_stock(v, sym, limit, minimal_mode, interval='1D'):
                     result['time_str'] = pd.to_datetime(result['time']).dt.strftime('%Y-%m-%d')
                 
                 print(f"\n--- [ LỊCH SỬ GIÁ {sym} ] ---")
-                print(result[['time_str', 'open', 'high', 'low', 'close', 'change', 'pct_change', 'volume']])
+                # Reset index để hiển thị đẹp từ 0
+                print(result[['time_str', 'open', 'high', 'low', 'close', 'change', 'pct_change', 'volume']].reset_index(drop=True))
             else:
                 print(f"Không tìm thấy dữ liệu lịch sử cho mã {sym} với khung {vn_base}.")
         except Exception as e:
