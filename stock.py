@@ -15,7 +15,8 @@ TV_MAPPING = {
 YF_MAPPING = {
     'BTC': ('BTC-USD', 'Bitcoin / USD'),
     'ETH': ('ETH-USD', 'Ethereum / USD'),
-    'BNB': ('BNB-USD', 'Binance Coin / USD')
+    'BNB': ('BNB-USD', 'Binance Coin / USD'),
+    'NAS100': ('NQ=F', 'Nasdaq 100 Futures')
 }
 
 def parse_interval(interval_str):
@@ -90,25 +91,38 @@ def format_and_display_data(df_hist, sym, limit, unit):
         df_hist.rename(columns={'Datetime': 'time'}, inplace=True)
         
     df_hist['time'] = pd.to_datetime(df_hist['time'])
+    
+    # Tính toán time_vn trước khi bỏ timezone
     if df_hist['time'].dt.tz is not None:
+        # Chuyển đổi sang giờ Việt Nam (UTC+7)
+        df_hist['time_vn'] = df_hist['time'].dt.tz_convert('Asia/Ho_Chi_Minh').dt.tz_localize(None)
+        # Giờ gốc (thị trường) bỏ timezone
         df_hist['time'] = df_hist['time'].dt.tz_localize(None)
+    else:
+        # Nếu không có timezone (ví dụ dữ liệu ngày), giả định time_vn giống time
+        df_hist['time_vn'] = df_hist['time']
     
     df_hist['change'] = df_hist['close'].diff().fillna(0.0)
     df_hist['pct_change'] = (df_hist['close'].pct_change() * 100).fillna(0.0)
     
     if unit in ['m', 'H']:
-        df_hist['time_str'] = df_hist['time'].dt.strftime('%Y-%m-%d %H:%M:%S')
+        fmt = '%Y-%m-%d %H:%M:%S'
     else:
-        df_hist['time_str'] = df_hist['time'].dt.strftime('%Y-%m-%d')
+        fmt = '%Y-%m-%d'
         
     pd.options.display.float_format = '{:,.2f}'.format
     print(f"\n--- [ LỊCH SỬ GIÁ {sym} ] ---")
     
-    cols_to_show = ['time_str', 'symbol', 'open', 'high', 'low', 'close', 'change', 'pct_change', 'volume']
-    cols_available = [c for c in cols_to_show if c in df_hist.columns]
+    # Chuẩn bị DataFrame hiển thị
+    show_df = df_hist.tail(limit).copy()
     
-    show_df = df_hist.tail(limit)[cols_available].reset_index(drop=True)
-    print(show_df)
+    # Sử dụng giờ Việt Nam làm cột 'time' duy nhất cho hiển thị
+    show_df['time'] = show_df['time_vn'].dt.strftime(fmt)
+    
+    cols_to_show = ['time', 'symbol', 'open', 'high', 'low', 'close', 'change', 'pct_change', 'volume']
+    cols_available = [c for c in cols_to_show if c in show_df.columns]
+    
+    print(show_df[cols_available].reset_index(drop=True))
 
 def analyze_tv(sym, tv_config, interval, limit, value, unit):
     tv_sym, tv_exc, full_name = tv_config
