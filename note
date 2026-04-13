@@ -1,0 +1,67 @@
+# 📊 CHIẾN LƯỢC GIAO DỊCH NAS100 CHI TIẾT
+> *Sổ tay vận hành dựa trên dữ liệu lịch sử 01-03 năm*
+
+---
+
+### 🛡️ GIAI ĐOẠN 1: QUAN SÁT & ĐỊNH HÌNH BẪY
+**Thời gian:** 20:00 - 21:59 (Giờ VN)
+
+*   **Đặc điểm:** Nhà tạo lập (Market Maker) giăng bẫy thanh khoản. Volume nổ cực lớn (> 80k - 150k hợp đồng).
+*   **Hành động:** **NGỒI IM**. Tắt mọi nút lệnh Buy/Sell.
+*   **Kỹ thuật cần làm (Lúc 22:00):** Kẻ 2 đường ngang để xác định **Vùng Cân Bằng Đầu Phiên (Initial Balance - IB)**:
+    *   **Đường Đỉnh (High):** Điểm cao nhất của 2 cây nến H1 (20:00 & 21:00).
+    *   **Đường Đáy (Low):** Điểm thấp nhất của 2 cây nến H1 này.
+
+---
+
+### 🏆 GIAI ĐOẠN 2: KHUNG GIỜ VÀNG (ENTRY)
+**Thời gian:** 22:00 - 23:59 (Giờ VN)
+
+Đây là lúc xu hướng thật xuất hiện. Volume ổn định (40k - 70k).
+
+#### **Kịch bản 1: Đánh Đột Phá (Breakout)**
+*   **BUY:** Nến H1 đóng cửa **VƯỢT QUA** đường Đỉnh IB với Volume duy trì mức > 50k.
+*   **SELL:** Nến H1 đóng cửa **XUYÊN THỦNG** đường Đáy IB với Volume tăng mạnh.
+
+#### **Kịch bản 2: Đánh Đảo Chiều (Judas Swing)**
+*   **BUY:** Nếu giá phá Đáy IB lúc 20:00-21:00 nhưng nến 22:00 **RÚT CHÂN MẠNH** và đóng cửa chui ngược vào lại bên trong IB.
+*   **Ý nghĩa:** Đây là cú lừa quét Stoploss phe Mua kinh điển trước khi tăng thật.
+
+---
+
+### ☕ GIAI ĐOẠN 3: GIỜ NGHỈ & QUẢN LÝ LỆNH
+**Thời gian:** 00:00 - 01:59 (Giờ VN)
+
+*   **Đặc điểm:** Phố Wall đi ăn trưa. Volume giảm mạnh (20k - 40k). Giá đi ngang khó chịu.
+*   **Quy tắc:** **KHÔNG MỞ LỆNH MỚI**.
+*   **Quản lý:** Nếu đã có lệnh lời -> Dời Stoploss về **Hòa vốn (Entry)**. 
+*   **Cảnh báo:** Nếu đột ngột nổ Volume lớn đi ngược chiều lệnh -> **THOÁT NGAY**.
+
+---
+
+### ⚡ GIAI ĐOẠN 4: POWER HOUR - PHÁN QUYẾT
+**Thời gian:** 02:00 - 02:55 (Giờ VN)
+
+*   **Đặc điểm:** Quyền chọn 0DTE đáo hạn. Volume bùng nổ (cao gấp đôi lúc 01:00).
+*   **An toàn:** Đóng tất cả lệnh lúc **01:55 sáng**. Bỏ tiền vào túi và đi ngủ.
+*   **Gồng lời:** Nếu giữ lệnh, phải dùng **Trailing Stop** bám sát từng cây nến 15 phút.
+*   **Quy tắc sinh tử:** Bắt buộc **ĐÓNG TOÀN BỘ LỆNH** vào lúc **02:55 sáng**.
+
+---
+
+### ⚙️ QUY TẮC QUẢN TRỊ RỦI RO (SL/TP)
+
+#### **1. Đặt Stoploss (SL) Chuẩn**
+*   **Lệnh BUY:** Dưới Low của nến H1 xác nhận (nến 22:00/23:00) khoảng **5-10 points**.
+*   **Lệnh SELL:** Trên High của nến H1 xác nhận khoảng **5-10 points**.
+*   **Rủi ro tối đa:** Không quá **1% - 2%** tài khoản cho mỗi lệnh.
+
+#### **2. Đặt Chốt Lời (TP)**
+*   **TP 1:** Tỷ lệ R:R = **1:1**. Chốt 1/2 khối lượng và dời SL về Hòa vốn.
+*   **TP 2:** Tỷ lệ R:R = **1:2**.
+*   **Time-based Exit:** Nếu đồng hồ chỉ **01:55** hoặc **02:55** -> Cắt lệnh bằng mọi giá.
+
+---
+
+### 📜 CÂU THẦN CHÚ CHIẾN LƯỢC
+> **"Tránh bão lúc 20h, tìm xu hướng lúc 22h, dời cắt lỗ lúc 00h và chốt tiền chạy trốn trước 3h sáng."**
