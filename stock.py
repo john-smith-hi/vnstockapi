@@ -6,6 +6,12 @@ import os
 import time
 import re
 import warnings
+import io
+import argparse
+
+# Đảm bảo đầu ra (stdout) luôn sử dụng UTF-8 (fix lỗi Unicode trên Windows)
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
 # Mapping cấu hình
 TV_MAPPING = {
@@ -16,7 +22,9 @@ YF_MAPPING = {
     'BTC': ('BTC-USD', 'Bitcoin / USD'),
     'ETH': ('ETH-USD', 'Ethereum / USD'),
     'BNB': ('BNB-USD', 'Binance Coin / USD'),
-    'NAS100': ('NQ=F', 'Nasdaq 100 Futures')
+    'NAS100': ('NQ=F', 'Nasdaq 100 Futures'),
+    'WTI': ('CL=F', 'Crude Oil WTI Futures'),
+    'BRENT': ('BZ=F', 'Brent Crude Oil Futures')
 }
 
 def parse_interval(interval_str):
@@ -75,7 +83,7 @@ def print_header(sym, full_name, interval):
         print(f"      Khung thời gian: {interval}")
     print("="*50)
 
-def format_and_display_data(df_hist, sym, limit, unit):
+def format_and_display_data(df_hist, sym, limit, unit, us_only=False):
     if df_hist is None or df_hist.empty:
         print(f"Không tìm thấy dữ liệu cho mã {sym}.")
         return
@@ -92,15 +100,18 @@ def format_and_display_data(df_hist, sym, limit, unit):
         
     df_hist['time'] = pd.to_datetime(df_hist['time'])
     
-    # Tính toán time_vn trước khi bỏ timezone
+    # Đảm bảo dữ liệu được sắp xếp và không bị trùng lặp thời gian
+    df_hist = df_hist.sort_values('time').drop_duplicates('time', keep='last')
+    
+    # Tính toán giờ Việt Nam (UTC+7)
     if df_hist['time'].dt.tz is not None:
-        # Chuyển đổi sang giờ Việt Nam (UTC+7)
         df_hist['time_vn'] = df_hist['time'].dt.tz_convert('Asia/Ho_Chi_Minh').dt.tz_localize(None)
-        # Giờ gốc (thị trường) bỏ timezone
-        df_hist['time'] = df_hist['time'].dt.tz_localize(None)
     else:
-        # Nếu không có timezone (ví dụ dữ liệu ngày), giả định time_vn giống time
         df_hist['time_vn'] = df_hist['time']
+        
+    # Lọc phiên Mỹ nếu có yêu cầu (20:00 tới 03:00 sáng hôm sau giờ VN)
+    if us_only:
+        df_hist = df_hist[df_hist['time_vn'].dt.hour.isin([20, 21, 22, 23, 0, 1, 2, 3])]
     
     df_hist['change'] = df_hist['close'].diff().fillna(0.0)
     df_hist['pct_change'] = (df_hist['close'].pct_change() * 100).fillna(0.0)
@@ -111,12 +122,14 @@ def format_and_display_data(df_hist, sym, limit, unit):
         fmt = '%Y-%m-%d'
         
     pd.options.display.float_format = '{:,.2f}'.format
-    print(f"\n--- [ LỊCH SỬ GIÁ {sym} ] ---")
+    pd.set_option('display.max_rows', None)
+    pd.set_option('display.max_columns', None)
+    pd.set_option('display.width', None)
+    
+    print(f"\n--- [ LỊCH SỬ GIÁ {sym} {'(Phiên Mỹ)' if us_only else ''} ] ---")
     
     # Chuẩn bị DataFrame hiển thị
     show_df = df_hist.tail(limit).copy()
-    
-    # Sử dụng giờ Việt Nam làm cột 'time' duy nhất cho hiển thị
     show_df['time'] = show_df['time_vn'].dt.strftime(fmt)
     
     cols_to_show = ['time', 'symbol', 'open', 'high', 'low', 'close', 'change', 'pct_change', 'volume']
@@ -163,11 +176,11 @@ def analyze_tv(sym, tv_config, interval, limit, value, unit):
                 pass
             time.sleep(1.5)
             
-        format_and_display_data(df_hist, sym, limit, unit)
+        format_and_display_data(df_hist, sym, limit, unit, us_only=us_only)
     except Exception as e:
         print(f"Lỗi truy xuất TradingView cho {sym}: {e}")
 
-def analyze_yf(sym, yf_config, interval, limit, value, unit):
+def analyze_yf(sym, yf_config, interval, limit, value, unit, us_only=False):
     yf_sym, full_name = yf_config
     import yfinance as yf
     
@@ -225,13 +238,13 @@ def analyze_yf(sym, yf_config, interval, limit, value, unit):
             if not is_native:
                 df_hist = resample_data(df_hist, interval)
                 
-            format_and_display_data(df_hist, sym, limit, unit)
+            format_and_display_data(df_hist, sym, limit, unit, us_only=us_only)
         else:
             print(f"Không tìm thấy dữ liệu API cho mã {sym}.")
     except Exception as e:
         print(f"Lỗi truy xuất API cho {sym}: {e}")
 
-def analyze_vnstock(v, sym, limit, minimal_mode, interval, value, unit):
+def analyze_vnstock(v, sym, limit, minimal_mode, interval, value, unit, us_only=False):
     print_header(sym, "", interval)
     
     try:
@@ -250,7 +263,6 @@ def analyze_vnstock(v, sym, limit, minimal_mode, interval, value, unit):
         elif unit == 'D': vn_base = '1D'
         elif unit == 'W': vn_base = '1W'
         elif unit == 'M': vn_base = '1M'
-
         days_offset = limit * 3
         if unit == 'm':
             total_minutes = value * limit * 1.5
@@ -272,7 +284,7 @@ def analyze_vnstock(v, sym, limit, minimal_mode, interval, value, unit):
             if interval.upper() != vn_base.upper():
                 df_hist = resample_data(df_hist, interval)
                 
-            format_and_display_data(df_hist, sym, limit, unit)
+            format_and_display_data(df_hist, sym, limit, unit, us_only=us_only)
         else:
             print(f"Không tìm thấy dữ liệu lịch sử cho mã {sym} với khung {vn_base}.")
             
@@ -297,7 +309,7 @@ def analyze_vnstock(v, sym, limit, minimal_mode, interval, value, unit):
     except Exception as e:
         print(f"Lỗi truy xuất Vnstock cho {sym}: {e}")
 
-def analyze_stock(v, sym, limit, minimal_mode, interval='1D'):
+def analyze_stock(v, sym, limit, minimal_mode, interval='1D', us_only=False):
     """
     Hàm phân tích một mã cổ phiếu cụ thể với hỗ trợ khung thời gian linh hoạt.
     Bộ điều hướng (Router) cho các loại tài sản khác nhau.
@@ -306,11 +318,11 @@ def analyze_stock(v, sym, limit, minimal_mode, interval='1D'):
         value, unit = parse_interval(interval)
         
         if sym in TV_MAPPING:
-            analyze_tv(sym, TV_MAPPING[sym], interval, limit, value, unit)
+            analyze_tv(sym, TV_MAPPING[sym], interval, limit, value, unit, us_only=us_only)
         elif sym in YF_MAPPING:
-            analyze_yf(sym, YF_MAPPING[sym], interval, limit, value, unit)
+            analyze_yf(sym, YF_MAPPING[sym], interval, limit, value, unit, us_only=us_only)
         else:
-            analyze_vnstock(v, sym, limit, minimal_mode, interval, value, unit)
+            analyze_vnstock(v, sym, limit, minimal_mode, interval, value, unit, us_only=us_only)
             
     except Exception as e:
         print(f"\nLỗi khởi tạo phân tích cho mã {sym}: {e}")
@@ -417,40 +429,56 @@ def screen_hose_stocks(v):
     print(f"XONG! Kết quả đã lưu tại 'result.txt'.")
 
 def main():
-    if len(sys.argv) > 1 and sys.argv[1].upper() == 'SCREEN_HOSE':
+    parser = argparse.ArgumentParser(description="VNSTOCK & Global Market Analyzer")
+    parser.add_argument("symbols", nargs="?", default="FPT", help="Danh sách mã (ví dụ: FPT,VNM hoặc BTC NAS100M)")
+    parser.add_argument("limit", type=int, nargs="?", default=20, help="Số lượng phiên (mặc định: 20)")
+    parser.add_argument("minimal", type=int, nargs="?", default=0, help="Chế độ rút gọn (1: Có, 0: Không)")
+    parser.add_argument("interval", nargs="?", default="1D", help="Khung thời gian (1m, 1H, 1D, ...)")
+    parser.add_argument("-o", "--output", help="Đường dẫn file để xuất kết quả")
+    
+    # Hỗ trợ lệnh SCREEN_HOSE
+    args, unknown = parser.parse_known_args()
+    
+    if args.symbols.upper() == 'SCREEN_HOSE':
         v = Vnstock()
         screen_hose_stocks(v)
         return
 
-    input_syms = sys.argv[1] if len(sys.argv) > 1 else 'FPT'
-    if ',' in input_syms:
-        symbols = [s.strip().upper() for s in input_syms.split(',')]
-    else:
-        symbols = [s.strip().upper() for s in input_syms.split()]
-        
-    try:
-        limit = int(sys.argv[2]) if len(sys.argv) > 2 else 20
-    except:
-        limit = 20
-        
-    minimal_mode = (sys.argv[3] == '1') if len(sys.argv) > 3 else False
-    interval = sys.argv[4] if len(sys.argv) > 4 else '1D'
+    symbols_list = args.symbols.replace(',', ' ').split()
+    limit = args.limit
+    minimal_mode = (args.minimal == 1)
+    interval = args.interval
+    
+    # Redirect stdout sang file nếu có tham số -o
+    original_stdout = sys.stdout
+    if args.output:
+        f_output = open(args.output, 'w', encoding='utf-8')
+        sys.stdout = f_output
              
     v = Vnstock()
     
     print("==================================================")
     print(f"      VNSTOCK 3.x MULTI-STOCK DEMO               ")
-    print(f"      Danh sách: {', '.join(symbols)}")
+    print(f"      Danh sách: {', '.join(symbols_list)}")
     print(f"      Khung: {interval}, Số lượng: {limit}")
     print("==================================================")
 
-    for sym in symbols:
+    for sym in symbols_list:
         if sym:
-            analyze_stock(v, sym, limit, minimal_mode, interval)
+            us_only = False
+            if sym.endswith('M') and len(sym) > 1:
+                sym = sym[:-1]
+                us_only = True
+            analyze_stock(v, sym, limit, minimal_mode, interval, us_only=us_only)
 
     print("\n" + "="*50)
     print("      HOÀN THÀNH PHÂN TÍCH TẤT CẢ CÁC MÃ          ")
     print("="*50)
+    
+    if args.output:
+        sys.stdout = original_stdout
+        f_output.close()
+        print(f"Kết quả phân tích đã được lưu vào: {args.output}")
 
 if __name__ == "__main__":
     main()

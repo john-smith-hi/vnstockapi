@@ -1,68 +1,72 @@
-# VNSTOCK API DEMO (Vnstock 3.x)
+# VNSTOCK API & GLOBAL MARKET ANALYZER
 
-Bộ công cụ demo tích hợp toàn diện các API của thư viện `vnstock` phiên bản 3.x (Bản mới nhất). Chương trình được thiết kế linh hoạt, cho phép tra cứu nhanh lịch sử giá và các chỉ số tài chính của bất kỳ mã chứng khoán nào.
+Bộ công cụ phân tích thị trường tài chính đa năng, tích hợp dữ liệu từ **Vnstock (KBS)**, **Yahoo Finance** và **TradingView**. Chương trình hỗ trợ theo dõi cổ phiếu Việt Nam, chỉ số thế giới, tiền điện tử và hàng hóa (Vàng, Dầu).
 
-## 1. Môi trường yêu cầu (Quan trọng)
-Thư viện `vnstock` 3.x yêu cầu môi trường Python ổn định. Để tránh các lỗi tương thích (đặc biệt là lỗi `applymap` trên Pandas 3.0), hãy cài đặt theo các phiên bản sau:
-- **Python**: >= 3.7
-- **Pandas**: `< 3.0.0` (Khuyên dùng `2.2.3` hoặc `2.3.3`)
-- **vnstock**: `>= 3.0.0`
-- **pytz**: Cần thiết cho xử lý múi giờ.
+## 1. Tính năng nổi bật
+- **Đa tài sản**: Cổ phiếu VN (HOSE, HNX, UPCOM), Crypto (BTC, ETH, BNB), Chỉ số (NAS100), Hàng hóa (WTI, BRENT, GOLD).
+- **Múi giờ Việt Nam**: Tự động chuyển đổi tất cả dữ liệu quốc tế sang giờ Việt Nam (UTC+7).
+- **Lọc phiên Mỹ ('M')**: Hỗ trợ lọc nhanh các khung giờ biến động mạnh của thị trường Mỹ (20:00 - 03:00 VN).
+- **Hiển thị đầy đủ**: Cấu hình Pandas hiển thị toàn bộ dữ liệu, không bị cắt bới (...).
+- **Khung thời gian linh hoạt**: Hỗ trợ từ 1 phút (`1m`) đến 1 tháng (`1M`).
 
-## 2. Hướng dẫn cài đặt
-Mở cmd/terminal và chạy lệnh sau để thiết lập môi trường chuẩn:
+## 2. Cài đặt môi trường
+Yêu cầu Python >= 3.7 và các thư viện hỗ trợ:
 ```bash
-pip install vnstock pytz "pandas<3.0.0"
+pip install vnstock yfinance tvDatafeed pandas<3.0.0 pytz
 ```
 
 ## 3. Cách chạy chương trình
-Cấu trúc lệnh chạy:
+Cấu trúc lệnh:
 ```bash
-python vnstock_demo.py "<DANH_SÁCH_MÃ>" <SỐ_PHIÊN> <CHẾ_ĐỘ_RÚT_GỌN>
+python stock.py "<DANH_SÁCH_MÃ>" <SỐ_PHIÊN> <MINIMAL_MODE> <INTERVAL> [-o OUTPUT_FILE]
 ```
 
-### Các tham số truyền vào:
-1.  **DANH_SÁCH_MÃ** (Mặc định: `FPT`): Danh sách mã chứng khoán, phân cách bằng dấu phẩy hoặc dấu cách (ví dụ: `HPG,PVD,VNM` hoặc `"HPG VCB"`).
-2.  **SỐ_PHIÊN** (Mặc định: `20`): Số lượng phiên giao dịch gần nhất muốn hiển thị.
-3.  **CHẾ_ĐỘ_RÚT_GỌN** (Mặc định: `0`):
-    - `0`: Hiển thị đầy đủ (Lịch sử giá, Tổng quan công ty, Báo cáo tài chính, Chỉ số tài chính).
-    - `1`: Chỉ hiển thị bảng lịch sử giá cho từng mã (Minimal Mode).
-4.  **INTERVAL** (Mặc định: `1D`): Khung thời gian dữ liệu.
-    - `1D`: Theo ngày (Mặc định).
-    - `1H`: Theo khung 1 giờ.
+### Các tham số:
+1.  **DANH_SÁCH_MÃ**: Mã cổ phiếu (VNM, FPT), Crypto (BTC), Hàng hóa (GOLD, WTI, BRENT) hoặc Index (NAS100).
+    - Thêm hậu tố **'M'** để chỉ lấy dữ liệu trong phiên Mỹ (20:00 - 03:00). Ví dụ: `NAS100M`.
+2.  **SỐ_PHIÊN**: Số lượng nến/thanh dữ liệu muốn xem (Mặc định: 20).
+3.  **MINIMAL_MODE**: 
+    - `0`: Hiển thị đầy đủ báo cáo tài chính (chỉ cho mã VN).
+    - `1`: Chỉ hiển thị bảng lịch sử giá (Khuyên dùng).
+4.  **INTERVAL**: Khung thời gian (Ví dụ: `1m`, `1h`, `1H`, `1D`, `1W`, `1M`).
+5.  **-o / --output**: (Tùy chọn) Đường dẫn file để lưu kết quả. Dữ liệu sẽ được lưu với mã hóa UTF-8 chuẩn.
 
-### Ví dụ sử dụng:
-- **Xem nhiều mã đồng thời (Chế độ rút gọn)**:
-  ```bash
-  python vnstock_demo.py HPG,PVD,TCB 15 1
-  ```
-- **Tra cứu danh sách bằng dấu cách (Cần bọc trong ngoặc kép)**:
-  ```bash
-  python vnstock_demo.py "FPT VCB VNM" 20 1
-  ```
-- **Lọc cổ phiếu sàn HOSE theo Target (Cực kỳ mạnh mẽ)**:
-  - Lệnh: `python vnstock_demo.py SCREEN_HOSE`
-  - Chức năng: Quét toàn bộ ~400+ mã trên sàn HOSE dựa trên 4 bộ lọc kỹ thuật khắt khe:
-    1. **Thanh khoản**: Loại bỏ rác, chỉ lấy mã có Vol 20p > 100k và Giá > 5k.
-    2. **Xu hướng**: Chỉ lấy mã đang trong Uptrend (Giá > SMA20 và SMA50).
-    3. **Tích lũy**: Tìm các mã có nền giá phẳng (Biên độ 20 phiên < 15%).
-    4. **Điểm nổ (Trigger)**: Bắt các mã có phiên bùng nổ về Giá (>2%) và Khối lượng (>1.5x trung bình).
-  - **Lưu ý cho gói Guest**: Vì giới hạn 20 yêu cầu/phút, chương trình đã được cấu hình tự động trễ 3.5 giây/mã. Quá trình quét toàn sàn HOSE sẽ mất khoảng 20-30 phút. Kết quả cuối cùng sẽ được ghi vào file `result.txt`.
+## 4. Ví dụ sử dụng
 
-## 4. Các tính năng nổi bật trong code
-- **Cột tính toán bổ sung**: Bảng lịch sử giá tự động tính thêm 2 cột:
-  - `change`: Mức tăng/giảm giá tuyệt đối so với phiên trước.
-  - `pct_change`: Phần trăm (%) tăng/giảm so với phiên trước.
-- **Nguồn dữ liệu**: Mặc định sử dụng nguồn `VCI` (VietCap) cho độ ổn định cao.
-- **Xử lý lỗi**: Mỗi đầu mục API được đặt trong khối `try...except` riêng biệt, giúp chương trình vẫn chạy tiếp nếu một nguồn dữ liệu cụ thể gặp sự cố.
+### Xem giá Vàng (XAUUSD) từ TradingView
+```bash
+python stock.py GOLD 10 1 1H
+```
 
-## 5. Cấu trúc đối tượng API (Vnstock 3.x)
-Khác với các bản cũ, Vnstock 3.x sử dụng hướng đối tượng:
-- `v = Vnstock()`: Khởi tạo thư viện.
-- `stock = v.stock(symbol='XXX', source='VCI')`: Khởi tạo đối tượng cho mã cụ thể.
-- `stock.quote.history(...)`: Lấy dữ liệu giá.
-- `stock.finance.income_statement(...)`: Lấy báo cáo tài chính.
-- `stock.company.overview()`: Lấy thông tin doanh nghiệp.
+### Xem Nasdaq 100 phiên Mỹ (20:00 - 03:00 VN)
+```bash
+python stock.py NAS100M 100 1 1H
+```
 
-> [!TIP]
-> Do thị trường chứng khoán Việt Nam không giao dịch vào cuối tuần và ngày lễ, tham số `SỐ_PHIÊN` sẽ tự động lấy dữ liệu trong khoảng thời gian rộng hơn (60 ngày) để đảm bảo trích xuất đủ số lượng phiên giao dịch thực tế bạn yêu cầu.
+### Xem dầu thô WTI và BRENT
+```bash
+python stock.py "WTI BRENT" 20 1 1D
+```
+
+### Xem nhiều mã Crypto cùng lúc
+```bash
+python stock.py BTC,ETH,BNB 20 1 1H
+```
+
+### Quét cổ phiếu sàn HOSE (Tiêu chuẩn kỹ thuật)
+```bash
+python stock.py SCREEN_HOSE
+```
+Chức năng này sẽ quét toàn bộ sàn HOSE và lọc ra các mã đạt tiêu chuẩn về thanh khoản, xu hướng (Price > SMA20/50) và điểm nổ (Breakout). Kết quả lưu tại `result.txt`.
+
+## 5. Danh sách mã đặc biệt hỗ trợ
+| Mã | Mô tả | Nguồn |
+|---|---|---|
+| `GOLD` | Giá Vàng (XAUUSD) | TradingView |
+| `WTI` | Dầu thô WTI (CL=F) | Yahoo Finance |
+| `BRENT` | Dầu thô Brent (BZ=F) | Yahoo Finance |
+| `NAS100` | Chỉ số Nasdaq 100 (NQ=F) | Yahoo Finance |
+| `BTC/ETH/BNB` | Tiền điện tử | Yahoo Finance |
+
+---
+**Lưu ý**: Dữ liệu có thể bị trễ vài phút tùy thuộc vào API nguồn. Đối với dữ liệu phút/giờ, chương trình tự động bù đắp các khoảng trống dữ liệu để đảm bảo timeline liên tục.
