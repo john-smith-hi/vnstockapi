@@ -137,7 +137,7 @@ def format_and_display_data(df_hist, sym, limit, unit, us_only=False):
     
     print(show_df[cols_available].reset_index(drop=True))
 
-def analyze_tv(sym, tv_config, interval, limit, value, unit):
+def analyze_tv(sym, tv_config, interval, limit, value, unit, us_only=False):
     tv_sym, tv_exc, full_name = tv_config
     from tvDatafeed import TvDatafeed, Interval
     warnings.filterwarnings('ignore')
