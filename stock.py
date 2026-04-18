@@ -15,7 +15,8 @@ if sys.stdout.encoding != 'utf-8':
 
 # Mapping cấu hình
 TV_MAPPING = {
-    'GOLD': ('XAUUSD', 'OANDA', 'Gold / USD (TradingView)')
+    'GOLD': ('XAUUSD', 'OANDA', 'Gold / USD (TradingView)'),
+    'NAS100': ('NQ1!', 'CME_MINI', 'Nasdaq 100 Futures (TradingView)')
 }
 
 YF_MAPPING = {
@@ -167,10 +168,16 @@ def analyze_tv(sym, tv_config, interval, limit, value, unit, us_only=False):
         elif unit == 'M': tv_interval = Interval.in_monthly
         
         df_hist = None
+        # Nếu chỉ lấy phiên Mỹ (us_only), cần lấy nhiều bar hơn để sau khi lọc vẫn đủ limit
+        fetch_limit = limit + 5
+        if us_only:
+            fetch_limit = (limit * 4) + 10 # Giả định phiên Mỹ chiếm ~1/3-1/4 tổng thời gian
+            
         for attempt in range(3):
             try:
-                df_hist = tv.get_hist(symbol=tv_sym, exchange=tv_exc, interval=tv_interval, n_bars=limit + 5)
+                df_hist = tv.get_hist(symbol=tv_sym, exchange=tv_exc, interval=tv_interval, n_bars=fetch_limit)
                 if df_hist is not None and not df_hist.empty:
+                    df_hist['symbol'] = sym
                     break
             except Exception:
                 pass
@@ -202,15 +209,27 @@ def analyze_yf(sym, yf_config, interval, limit, value, unit, us_only=False):
             if value == 3: yf_interval_match = "3mo"
             else: yf_interval_match = "1mo"
         
-        days_buffer = limit * 2
-        if unit == 'm': days_buffer = max(limit // 390 + 2, 7)
-        elif unit == 'H': days_buffer = max(limit // 7 + 5, 30)
-        elif unit == 'W': days_buffer = limit * 10
-        elif unit == 'M': days_buffer = limit * 45
-        
-        period_str = f"{days_buffer}d"
-        if unit in ['M', 'W'] or days_buffer > 730: period_str = "max"
-        if yf_interval_match == '1m': period_str = "7d"
+        # Tự động tính toán period tối ưu dựa trên limit và interval
+        # yfinance limits: 1m (7d), 2m-90m (60d), 1h (730d)
+        if unit == 'm':
+            # Giả định tối thiểu số bar mỗi ngày (stock: 13 bar 30p, crypto/futures: 48 bar 30p)
+            # Dùng con số an toàn để tính số ngày cần thiết
+            bars_per_day = max(1, 390 // value) 
+            needed_days = (limit // bars_per_day) + 5
+            
+            if value == 1:
+                period_str = f"{min(needed_days, 7)}d"
+            else:
+                period_str = f"{min(needed_days, 60)}d"
+        elif unit == 'H':
+            bars_per_day = max(1, 24 // value)
+            needed_days = (limit // bars_per_day) + 5
+            if needed_days > 730:
+                period_str = "max"
+            else:
+                period_str = f"{needed_days}d"
+        else:
+            period_str = "max"
         
         df_hist = yf.download(tickers=yf_sym, interval=yf_interval_match, period=period_str, progress=False)
         
