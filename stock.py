@@ -15,16 +15,16 @@ if sys.stdout.encoding != 'utf-8':
 
 # Mapping cấu hình
 TV_MAPPING = {
-    'GOLD': ('XAUUSD', 'OANDA', 'Gold / USD (TradingView)')
+    'GOLD': ('XAUUSD', 'OANDA', 'Gold / USD (TradingView)'),
+    'NAS100': ('NQ1!', 'CME_MINI', 'Nasdaq 100 Futures'),
+    'WTI': ('USOIL', 'TVC', 'Crude Oil WTI Futures'),
+    'BRENT': ('UKOIL', 'TVC', 'Brent Crude Oil Futures')
 }
 
 YF_MAPPING = {
     'BTC': ('BTC-USD', 'Bitcoin / USD'),
     'ETH': ('ETH-USD', 'Ethereum / USD'),
-    'BNB': ('BNB-USD', 'Binance Coin / USD'),
-    'NAS100': ('NQ=F', 'Nasdaq 100 Futures'),
-    'WTI': ('CL=F', 'Crude Oil WTI Futures'),
-    'BRENT': ('BZ=F', 'Brent Crude Oil Futures')
+    'BNB': ('BNB-USD', 'Binance Coin / USD')
 }
 
 def parse_interval(interval_str):
@@ -432,8 +432,8 @@ def main():
     parser = argparse.ArgumentParser(description="VNSTOCK & Global Market Analyzer")
     parser.add_argument("symbols", nargs="?", default="FPT", help="Danh sách mã (ví dụ: FPT,VNM hoặc BTC NAS100M)")
     parser.add_argument("limit", type=int, nargs="?", default=20, help="Số lượng phiên (mặc định: 20)")
-    parser.add_argument("minimal", type=int, nargs="?", default=0, help="Chế độ rút gọn (1: Có, 0: Không)")
     parser.add_argument("interval", nargs="?", default="1D", help="Khung thời gian (1m, 1H, 1D, ...)")
+    parser.add_argument("minimal", type=int, nargs="?", default=1, help="Chế độ rút gọn (1: Có, 0: Không)")
     parser.add_argument("-o", "--output", help="Đường dẫn file để xuất kết quả")
     
     # Hỗ trợ lệnh SCREEN_HOSE
@@ -446,8 +446,8 @@ def main():
 
     symbols_list = args.symbols.replace(',', ' ').split()
     limit = args.limit
-    minimal_mode = (args.minimal == 1)
     interval = args.interval
+    minimal_mode = (args.minimal == 1)
     
     # Redirect stdout sang file nếu có tham số -o
     original_stdout = sys.stdout

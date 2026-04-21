@@ -18,39 +18,39 @@ pip install vnstock yfinance tvDatafeed pandas<3.0.0 pytz
 ## 3. Cách chạy chương trình
 Cấu trúc lệnh:
 ```bash
-python stock.py "<DANH_SÁCH_MÃ>" <SỐ_PHIÊN> <MINIMAL_MODE> <INTERVAL> [-o OUTPUT_FILE]
+python stock.py "<DANH_SÁCH_MÃ>" <SỐ_PHIÊN> <INTERVAL> [MINIMAL_MODE] [-o OUTPUT_FILE]
 ```
 
 ### Các tham số:
 1.  **DANH_SÁCH_MÃ**: Mã cổ phiếu (VNM, FPT), Crypto (BTC), Hàng hóa (GOLD, WTI, BRENT) hoặc Index (NAS100).
     - Thêm hậu tố **'M'** để chỉ lấy dữ liệu trong phiên Mỹ (20:00 - 03:00). Ví dụ: `NAS100M`.
 2.  **SỐ_PHIÊN**: Số lượng nến/thanh dữ liệu muốn xem (Mặc định: 20).
-3.  **MINIMAL_MODE**: 
+3.  **INTERVAL**: Khung thời gian (Ví dụ: `1m`, `1h`, `1H`, `1D`, `1W`, `1M`).
+4.  **MINIMAL_MODE**: (Tùy chọn) 
+    - `1`: Chỉ hiển thị bảng lịch sử giá (Mặc định).
     - `0`: Hiển thị đầy đủ báo cáo tài chính (chỉ cho mã VN).
-    - `1`: Chỉ hiển thị bảng lịch sử giá (Khuyên dùng).
-4.  **INTERVAL**: Khung thời gian (Ví dụ: `1m`, `1h`, `1H`, `1D`, `1W`, `1M`).
 5.  **-o / --output**: (Tùy chọn) Đường dẫn file để lưu kết quả. Dữ liệu sẽ được lưu với mã hóa UTF-8 chuẩn.
 
 ## 4. Ví dụ sử dụng
 
 ### Xem giá Vàng (XAUUSD) từ TradingView
 ```bash
-python stock.py GOLD 10 1 1H
+python stock.py GOLD 10 1H
 ```
 
 ### Xem Nasdaq 100 phiên Mỹ (20:00 - 03:00 VN)
 ```bash
-python stock.py NAS100M 100 1 1H
+python stock.py NAS100M 100 1H
 ```
 
 ### Xem dầu thô WTI và BRENT
 ```bash
-python stock.py "WTI BRENT" 20 1 1D
+python stock.py "WTI BRENT" 20 1D
 ```
 
 ### Xem nhiều mã Crypto cùng lúc
 ```bash
-python stock.py BTC,ETH,BNB 20 1 1H
+python stock.py BTC,ETH,BNB 20 1H
 ```
 
 ### Quét cổ phiếu sàn HOSE (Tiêu chuẩn kỹ thuật)
