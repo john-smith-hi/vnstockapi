@@ -15,7 +15,10 @@ if sys.stdout.encoding != 'utf-8':
 
 # Mapping cấu hình
 TV_MAPPING = {
-    'GOLD': ('XAUUSD', 'OANDA', 'Gold / USD (TradingView)')
+    'GOLD': ('XAUUSD', 'OANDA', 'Gold / USD (TradingView)'),
+    'NAS100': ('NQ1!', 'CME_MINI', 'Nasdaq 100 Futures'),
+    'WTI': ('USOIL', 'TVC', 'WTI Crude Oil'),
+    'BRENT': ('UKOIL', 'TVC', 'Brent Crude Oil')
 }
 
 YF_MAPPING = {

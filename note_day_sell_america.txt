@@ -34,3 +34,6 @@ Sử dụng các kịch bản này để nhận diện các bẫy giá và các 
 - **Thông điệp:** Thị trường đang tích lũy lực bán để chuẩn bị cho một cú sụp đổ mạnh.
 - **Điểm vào:** Đặt lệnh **Sell Stop** dưới đáy của vùng nén này.
 - **Stop Loss:** Trên đỉnh của vùng nén (khoảng 60-80 điểm tùy độ rộng của hộp).
+
+
+

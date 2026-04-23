@@ -1,9 +1,7 @@
 # Tóm tắt kịch bản nến NAS100 (20:00 - 21:00)
 
 Dựa trên dữ liệu lịch sử và đặc tính biến động mạnh của NAS100 khi vào phiên Mỹ, đây là bản tóm tắt toàn bộ 4 kịch bản chính của nến 20:00 và 21:00.
-
-> [!TIP]
-> Bạn hãy coi đây là bộ "mã lệnh" (logic) để lọc tín hiệu. Nếu nến không rơi vào các trường hợp này, phương án an toàn nhất là **đứng ngoài**.
+Chốt lới ở giờ mở cửa 23:30
 
 ---
 
@@ -47,3 +45,4 @@ Dựa trên dữ liệu lịch sử và đặc tính biến động mạnh của
 - **Dấu hiệu (20:00 - 21:00):** Nến 20:00 tăng mạnh nhưng nến 21:00 lại giảm mạnh phủ định hoàn toàn cây nến trước.
 - **Thông điệp:** Thị trường đang tranh chấp cực độ, không rõ xu hướng (Side-way trong biên độ lớn).
 - **Hành động:** **ĐỨNG NGOÀI.** Tuyệt đối không vào lệnh khi nến 20:00 và 21:00 đá nhau (một xanh một đỏ dài tương đương). Hãy đợi đến khi có một phe thắng hẳn (thường là sau 23:00).
+
